@@ -5,7 +5,7 @@
   "permissions": ["activeTab", "scripting"],
   "content_scripts": [
     {
-      "matches": ["https://wobb.ai/*"],
+      "matches": ["https://stage.wobb.ai/*"],
       "js": ["content.js"],
       "run_at": "document_end"
     }

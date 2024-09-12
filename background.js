@@ -126,7 +126,7 @@ function createPopup() {
       if (!popupWindowId) {
         chrome.windows.create(
           {
-            url: `https://wobb.ai/app/discover/no-auth?username=${getSocialNameFromLink(currentUrl)}&platform=instagram`,
+            url: `https://stage.wobb.ai/app/discover/no-auth?username=${getSocialNameFromLink(currentUrl)}&platform=instagram`,
             type: "popup",
             width: width,
             height: height,
@@ -162,13 +162,13 @@ function focusOrCreatePopup() {
 chrome.tabs.updated.addListener(function (tabId, changeInfo, tab) {
   if (changeInfo.status === 'complete' && tab.active) {
     const newUrl = tab.url;
-    const changeUrl = `https://wobb.ai/app/discover/no-auth?username=${getSocialNameFromLink(newUrl)}&platform=instagram`;
+    const changeUrl = `https://stage.wobb.ai/app/discover/no-auth?username=${getSocialNameFromLink(newUrl)}&platform=instagram`;
     if((changeUrl !== null || newUrl !== '') && popupWindowId !== null) {
       if(popupWindowId) {
         chrome.tab.query({windowId: popupWindowId}, function(tabs) {
           if(tabs.length > 0) {
             if(changeUrl !== instagramURL && newUrl !== null && getSocialNameFromLink(newUrl) !== 'inavalidSocialName') {
-              chrome.tabs.update(tabs[0].id, {url: `https://wobb.ai/app/discover/no-auth?username=${getSocialNameFromLink(newUrl)}&platform=instagram`})
+              chrome.tabs.update(tabs[0].id, {url: `https://stage.wobb.ai/app/discover/no-auth?username=${getSocialNameFromLink(newUrl)}&platform=instagram`})
               instagramURL = changeUrl;
               chrome.windows.update(popupWindowId, {focused: true})
             }
