@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "Wobb - Influencer Marketing",
+  "version": "1.0",
+  "permissions": ["activeTab", "scripting"],
+  "content_scripts": [
+    {
+      "matches": ["https://wobb.ai/*"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "action": {
+    "default_icon": {
+      "16": "images/wobb.png",
+      "48": "images/wobb.png",
+      "128": "images/wobb.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+},
+  "icons": {
+    "16": "images/wobb.png",
+    "48": "images/wobb.png",
+    "128": "images/wobb.png"
+  }
+}
