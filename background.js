@@ -1,5 +1,4 @@
 let popupWindowId = null;
-let message = false;
 let instagramURL = "";
 
 function getInstagramPageType(url) {
@@ -14,7 +13,6 @@ function getInstagramPageType(url) {
     return 'other';
   }
 }
-
 
 function getCurrentTabUrl() {
   return new Promise((resolve, reject) => {
@@ -37,38 +35,12 @@ function getCurrentTabUrl() {
   });
 }
 
-
-chrome.action.onClicked.addListener(function () {
-  console.log(popupWindowId)
-  if (popupWindowId !== null) {
-    chrome.windows.get(popupWindowId, (window) => {
-      if (chrome.runtime.lastError) {
-        console.log("Error getting window:", chrome.runtime.lastError.message);
-        popupWindowId = null;
-        createPopup();
-      } else {
-        if (window.state === "minimized") {
-          chrome.windows.update(popupWindowId, { state: "normal" });
-        } else {
-          chrome.windows.update(popupWindowId, { focused: true });
-        }
-      }
-    });
-  } else {
-    if (!popupWindowId) {
-      createPopup();
-    }
-  }
-});
-
-
 function getSocialNameFromLink(link) {
   try {
     let socialName = "";
-    if (typeof link == "string") {
+    if (typeof link === "string") {
       if (link.includes(".com")) {
         let array = link.split("/");
-
         array.forEach((el, index) => {
           if (el.includes(".com")) {
             socialName = array[index + 1].split("?")[0];
@@ -89,11 +61,12 @@ function getSocialNameFromLink(link) {
     return "invalidSocialName";
   }
 }
+
 function createPopup() {
   chrome.windows.getCurrent(function (currentWindow) {
-    const width = Math.round(currentWindow.width * 0.4); 
+    const width = Math.round(currentWindow.width * 0.4);
     const height = currentWindow.height - 100;
-    const left = currentWindow.width - width; 
+    const left = currentWindow.width - width;
     const top = 90;
     getCurrentTabUrl().then(async (currentUrl) => {
       const urlOfType = getInstagramPageType(currentUrl);
@@ -106,23 +79,21 @@ function createPopup() {
         const [result] = await chrome.scripting.executeScript({
           target: { tabId: tab.id },
           func: () => {
-            return window.messageScriptLoaded || false;  
+            return window.messageScriptLoaded || false;
           },
         });
-    
+
         if (tab.id !== undefined) {
           if (!result.result) {
-           
             await chrome.scripting.executeScript({
               target: { tabId: tab.id },
               files: [urlOfType === "other" ? "message.js" : "instamessage.js"],
             });
           }
         }
-    
-        return; 
+        return;
       }
-    
+
       if (!popupWindowId) {
         chrome.windows.create(
           {
@@ -143,7 +114,6 @@ function createPopup() {
   });
 }
 
-
 function focusOrCreatePopup() {
   if (popupWindowId) {
     chrome.windows.get(popupWindowId, function (window) {
@@ -158,24 +128,40 @@ function focusOrCreatePopup() {
   }
 }
 
+chrome.action.onClicked.addListener(function () {
+  if (popupWindowId !== null) {
+    chrome.windows.get(popupWindowId, (window) => {
+      if (chrome.runtime.lastError) {
+        popupWindowId = null;
+        createPopup();
+      } else {
+        if (window.state === "minimized") {
+          chrome.windows.update(popupWindowId, { state: "normal" });
+        } else {
+          chrome.windows.update(popupWindowId, { focused: true });
+        }
+      }
+    });
+  } else {
+    createPopup();
+  }
+});
 
-chrome.tabs.updated.addListener(function (tabId, changeInfo, tab) {
+chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
   if (changeInfo.status === 'complete' && tab.active) {
     const newUrl = tab.url;
     const changeUrl = `https://wobb.ai/app/discover/no-auth?username=${getSocialNameFromLink(newUrl)}&platform=instagram`;
-    if((changeUrl !== null || newUrl !== '') && popupWindowId !== null) {
-      if(popupWindowId) {
-        chrome.tab.query({windowId: popupWindowId}, function(tabs) {
-          if(tabs.length > 0) {
-            if(changeUrl !== instagramURL && newUrl !== null && getSocialNameFromLink(newUrl) !== 'inavalidSocialName') {
-              chrome.tabs.update(tabs[0].id, {url: `https://wobb.ai/app/discover/no-auth?username=${getSocialNameFromLink(newUrl)}&platform=instagram`})
-              instagramURL = changeUrl;
-              chrome.windows.update(popupWindowId, {focused: true})
-            }
+
+    if (popupWindowId !== null && newUrl && getSocialNameFromLink(newUrl) !== 'invalidSocialName') {
+      chrome.tabs.query({ windowId: popupWindowId }, function (tabs) {
+        if (tabs.length > 0) {
+          if (changeUrl !== instagramURL) {
+            chrome.tabs.update(tabs[0].id, { url: changeUrl });
+            instagramURL = changeUrl;
+            chrome.windows.update(popupWindowId, { focused: true });
           }
-        })
-      }
+        }
+      });
     }
   }
-})
-
+});
